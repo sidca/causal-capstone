@@ -1,0 +1,249 @@
+---
+title: "Introduction to Interference"
+author: "Ellen Graham, Siddhant Singh"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+    theme: cosmo
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(tidyverse)
+library(inferference)
+library(wesanderson)
+my_palette <- wes_palette("Moonrise3")
+
+
+
+theme_set(theme_minimal())
+```
+
+
+## What is Causal Inference?
+
+
+### Causal Inference Assumptions
+
+
+
+## Causal Inference with Interference
+
+### Introduce Dataset
+
+We'll be using a package called `inferference` along with its associated data set `vaccinesim`, which details results from a cholera vaccine simulation:
+```{r}
+head(vaccinesim)
+```
+
+- Y: Did the subject contract cholera
+- X1: Age in decades
+- X2: Distance from nearest river
+- A: Subject was vaccinated (2/3 of those who participated were vaccinated)
+- B: Subject agreed to participate in study
+- group: Which neighborhood was the subject in? Different groups were vaccinated at different levels
+
+#### Examine infection levels across variables:
+
+```{r}
+vaccinesim %>% 
+  ggplot() +
+  geom_boxplot(aes(x = as.factor(Y), y = X1)) +
+  labs(x = "Infected",
+       y = "Age (Decades)")
+
+vaccinesim %>% 
+  ggplot() +
+  geom_boxplot(aes(x = as.factor(Y), y = X2)) +
+  labs(x = "Infected", 
+       y = "Distance from River")
+
+vaccinesim %>% 
+  ggplot() +
+  geom_bar(aes(x = as.factor(A), fill = as.factor(Y)),
+           position = "fill") +
+  labs(x = "Vaccinated",
+       fill = "Infected",
+       y = "Proportion") +
+  scale_fill_manual(values = my_palette)
+
+vaccinesim %>% 
+  ggplot() +
+  geom_bar(aes(x = as.factor(group), fill = as.factor(Y)),
+           width = 1, 
+           position = "fill") +
+  labs(x = "Group",
+       y = "Proportion",
+       fill = "Infected") +
+  scale_x_discrete(breaks = c("25", "75", "125", "175", "225")) +
+  scale_fill_manual(values = my_palette)
+```
+
+#### Examine vaccination levels across variables:
+
+```{r}
+vaccinesim %>% 
+  ggplot() +
+  geom_boxplot(aes(x = as.factor(A), y = X1)) +
+  labs(x = "Vaccinated",
+       y = "Age (Decades)")
+
+vaccinesim %>% 
+  ggplot() +
+  geom_boxplot(aes(x = as.factor(A), y = X2)) +
+  labs(x = "Vaccinated", 
+       y = "Distance from River")
+
+
+vaccinesim %>% 
+  ggplot() +
+  geom_bar(aes(x = as.factor(group), fill = as.factor(A)),
+           width = 1, 
+           position = "fill") +
+  labs(x = "Group",
+       y = "Proportion",
+       fill = "Vaccinated") +
+  scale_x_discrete(breaks = c("25", "75", "125", "175", "225")) +
+  scale_fill_manual(values = my_palette)
+```
+
+#### Interference Model
+
+Because this is a simulation study, we know the correct model:
+```{r}
+correct_model <- interference( formula = Y | A | B ~ X1 + X2 + (1|group) | group, 
+  allocations = seq(.2, .8, by = .05), 
+  data = vaccinesim, randomization = 2/3, method = 'simple')
+```
+
+Model works like this `outcome | exposure | participation ~ covariates | interference group`
+
+- `outcome`: Here, whether or not you were infected with cholera
+- `exposure`: Where you given treatment, ie. vaccination
+- `participation ~ covariates`: Our model for how people decided whether or not to participate. It varies based on how old they were (`X1`), how far from the river they were (`X2`), and which neighborhood they lived in `(1|group)`.
+- `interference group`: Which group that interacts with itself did the subject belong to, here neighborhood
+
+
+### Effects
+
+#### Direct Effects
+
+```{r}
+deff <- direct_effect(correct_model)
+
+deff %>% 
+  ggplot(aes(x = alpha2, y = estimate, ymin = conf.low, ymax = conf.high)) +
+  geom_ribbon(alpha = 1, fill = "#D1E1EC") +
+  geom_line(color = "#6497B1", size = 1) +
+  labs(x = "Vaccination Rate",
+       y = "Direct Effect (95% CI)")
+```
+
+
+#### Indirect Effects
+
+```{r}
+ieff.5 <- ie(correct_model, allocation1 = 0.5)
+
+ieff.5 %>% 
+  ggplot(aes(x = alpha2, y = estimate, ymin = conf.low, ymax = conf.high)) +
+  geom_ribbon(alpha = 1, fill = "#D1E1EC") +
+  geom_line(color = "#6497B1", size = 1) +
+  labs(x = "Vaccination Rate",
+       y = "Indirect Effect Relative to 50% Vaccination (95% CI)")
+```
+
+```{r}
+ieff_all <- correct_model$estimates %>% 
+  filter(effect == "indirect")
+
+ieff_all %>% 
+  ggplot() +
+  geom_raster(aes(x = alpha1, y = alpha2, fill = estimate), interpolate = TRUE) +
+  labs(x = "Vaccination Rate in Control Group", 
+       y = "Vaccination Rate in Comparison Group",
+       fill = "Indirect Effect") +
+  scale_fill_gradient2()
+```
+
+
+#### Total Effects
+
+```{r}
+teff.5_0 <- te(correct_model, allocation1 = 0.5)
+teff.5_1 <- te(correct_model, allocation1 = 0.5, trt.lvl1 = 1)
+
+teff_frame <- list("0" = teff.5_0, "1" = teff.5_1) %>% 
+  bind_rows(.id = "trt.lvl1")
+
+facet_labs_teff <- c("Unvaccinated to Vaccinated", "Vaccinated to Unvaccinated")
+names(facet_labs_teff) <- c("0", "1")
+
+teff_frame %>% 
+  ggplot(aes(x = alpha2, y = estimate, ymin = conf.low, ymax = conf.high)) +
+  geom_ribbon(alpha = 1, fill = "#D1E1EC") +
+  geom_line(color = "#6497B1", size = 1) +
+  labs(x = "Vaccination Rate",
+       y = "Total Effect Relative to 50% Vaccination (95% CI)") +
+  facet_wrap(~trt.lvl1, labeller = labeller(trt.lvl1 = facet_labs_teff))
+```
+
+
+```{r}
+teff_all <- correct_model$estimates %>% 
+  filter(effect == "total")
+
+facet_labs_oeff <- c("Unvaccinated to Vaccinated", "Vaccinated to Unvaccinated")
+names(facet_labs_oeff) <- c(0, 1)
+
+
+teff_all %>% 
+  ggplot() +
+  geom_raster(aes(x = alpha1, y = alpha2, fill = estimate), interpolate = TRUE) +
+  labs(x = "Vaccination Rate in Control Group", 
+       y = "Vaccination Rate in Comparison Group",
+       fill = "Overall Effect") +
+  facet_wrap(~trt1, labeller = labeller(trt1 = facet_labs_oeff)) +
+  scale_fill_gradient2()
+```
+
+
+#### Overall Effects
+
+```{r}
+oeff.5 <- oe(correct_model, allocation1 = 0.5)
+x <- oeff.5$alpha2
+y <- as.numeric(oeff.5$estimate)
+u <- as.numeric(oeff.5$conf.high)
+l <- as.numeric(oeff.5$conf.low)
+
+overall_effect <- tibble(x, y, u, l)
+
+overall_effect %>% 
+  ggplot(aes(x = x, y = y, ymin = l, ymax = u)) +
+  geom_ribbon(alpha = 1, fill = "#D1E1EC") +
+  geom_line(color = "#6497B1", size = 1) +
+  labs(x = "Vaccination Rate",
+       y = "Overall Effect Relative to 50% Vaccination (95% CI)")
+```
+
+
+```{r}
+
+oeff_all <- correct_model$estimates %>% 
+  filter(effect == "overall")
+
+oeff_all %>% 
+  ggplot() +
+  geom_raster(aes(x = alpha1, y = alpha2, fill = estimate), interpolate = TRUE) +
+  labs(x = "Vaccination Rate in Control Group", 
+       y = "Vaccination Rate in Comparison Group",
+       fill = "Overall Effect") +
+  scale_fill_gradient2()
+```
+
+
+
+
