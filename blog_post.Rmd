@@ -22,14 +22,26 @@ my_palette <- wes_palette("Moonrise3")
 
 theme_set(theme_minimal())
 ```
-## Introduction
+## Introduction (or abstract?)
 
-Causal Inference, a branch of statistics, enables us to make quantitative and qualitative conclusions about the effect of a particular exposure or treatment on the outcome. The standard methods of causal inference uses the Stable Unit Treatment Value Assumption (SUTVA), which requires that the exposure of one individual not affect the outcome of another. The presence of interference - that is, the phenomenon when one person getting treated affects another person's outcome - invalidates this assumptions. This post investigates how we can adapt our repertoire of methods from Causal Inference to situations with interference. 
+Causal Inference, a branch of statistics, enables us to make quantitative and qualitative conclusions about the effect of a particular exposure or treatment on how the treatment alone affects a study subject's results. The standard methods of causal inference uses the Stable Unit Treatment Value Assumption (SUTVA), which requires that the exposure of one individual not affect the outcome of another. The presence of interference - that is, the phenomenon when one person getting treated affects another person's outcome - invalidates this assumption. This post investigates how we can adapt our repertoire of methods from Causal Inference to situations with interference. 
 
 ## What is Causal Inference?
 
+Say we want to find out how a particular treatment affects the outcome of a situation. This could be the result of a drug trial, or the effect of a policy on how it affected the public. We could try and find out how those who got treated differed from those who did not. This can be done by a simple linear regression of the form $Y \sim A$ and seeing if the coefficient on A is statistically significant. At this point one is reminded of the ubiquitous mantra "Correlation does not imply causation". What if the treated population is just fundamentally different from those that were untreated?
 
-Each person's potential outcomes end up having two values, the treated value ($Y^{a=1}$) and the untreated value ($Y^{a=0}$). We can find the causal effect of treatment on one individual by calculating $Y^{a=1}-Y^{a=0}$. We can average this over all individuals to find the average causal effect, that is, $E[Y^{a=1}]-E[Y^{a=0}]$.
+We can express our dilemma using the figure below. What if instead of the treatment, $A$, affecting the outcome, $Y$, directly, there is some hidden variable that we do not account for in our analysis? In the situation represented by the graph below, XYZ publisher could claim that using their books leads to higher scores in AP exams by showing a statistical correlation, when the underlying reality is that students with higher family incomes tend to buy XYZ Publisher's books, and they're also the ones getting better AP scores on average. 
+
+![](dagprojectexample.png)
+
+
+Causal Inference deals with this dilemma, of trying to find only how one particular variable (the treatment) affects the outcome in a situation of interest. We now introduce the conceptual framework for how a causal inference analysis is done. 
+
+For a particular subject in a study, assume we can either treat them, or not. Let the treatment be represented by $A$, with $A=0$ representing no treatment, and $A=1$ representing treatment. Then the person with have an outcome $Y$, which might or might not vary depending on $A$. In reality we only see $Y|A=1$ or $Y|A=0$. Let $A = a$, where $a \in \{0,1\}$. A variable which denotes the possible outcomes for both treatment values can then be represented as $Y^a$. We refer to $Y^a$ as the potential outcome. 
+
+Each person's potential outcomes can have *two* values, the treated value ($Y^{a=1}$) and the untreated value ($Y^{a=0}$). We can find the causal effect of treatment on one individual by calculating $Y^{a=1}-Y^{a=0}$. We can average this over all individuals to find the average causal effect, that is, $$ACE = E[Y^{a=1}]-E[Y^{a=0}]$$.
+
+Note that of the two potential outcomes, only one is observed in reality. There are different ways in which we can find the value for the missing potential outcome . We subsequently discuss one particular method of achieving this using randomization of treatment, but there are other techniques such as Inverse Probability Weighting that can be used to this end (Hernan and Robins, 2020). 
 
 A crucial idea in causal inference is that of exchangeability. If the individuals in either of the treatment groups (control or treated) have the same characteristics, that is, one would expect them to have the same outcomes if they have the same treatment, then we can say exchangeability holds. This can be expressed as $Y^a \perp \perp A$ - the actual distribution of potential outcomes for the population is independent of the treatment. As long as we can ensure exchangeability holds between treatment groups, we can use the actual observed outcomes instead of the potential outcomes, half of which are not observed in reality. When exchangeability holds, the average causal effect becomes $E[Y|A=1]-E[Y|A=0]$. 
 
@@ -49,7 +61,13 @@ What happens if SUTVA does not hold? Say we have a setting like a vaccine study,
 
 ## Causal Inference with Interference
 
-As we defined earlier, interference is said to occur if the potential outcomes of one individual depend on the treatment value of another individual. 
+As we defined earlier, interference is said to occur if the potential outcomes of one individual depend on the treatment value of another individual. The causal graphs below demonstrate a situation without interference and with interference. 
+
+First, we see a situation without interference. The effect of treatment on individual $1$, $A_1$, only affects the outcome of individual $1$. The same is true for individuals $2$ and $3$.
+
+![](nointerferenceDAG.png)
+In a situation with interference, we see that the treatment of individual $1$, affects the outcome of all individuals present ($Y1$, $Y2$, and $Y3$). We can see how much more complicated our graph becomes in the presence of interference even when we have just three observations in the system. 
+![](interferenceDAG.png)
 
 We can carry out causal inference in settings with interference if we make a few simplifying assumptions. They are as follows: 
 
@@ -57,29 +75,30 @@ We can carry out causal inference in settings with interference if we make a few
 
 - Partial interference holds, that is, there is no interaction between individuals in different groups. In other words, people located in different groups cannot influence each other's potential outcomes. Intuitively, one could think of individuals located in different cities - what treatment someone receives in Saint Paul is not going to affect someone in Chicago.  
 
-A consequence of interference is that each individual  now has more than two potential outcomes, since they will either get treated or not treated, their neighbor (for lack of a better term) will get treated or not treated, and so on. Thus there are $2*2*2*2... =2^{number \ of \  group \ members}$ outcomes. Note that assumption (1) reduces the number of potential outcomes to $2^{number \ in \ group}$, instead of $2^{total \ population}$ in the absence of groups.
+A consequence of interference is that each individual now has more than two potential outcomes, since they will either get treated or not treated, their neighbor (for lack of a better term) will get treated or not treated, and so on. Thus there are $2*2*2*2... =2^{number \ of \  group \ members}$ outcomes. Note that assumption (1) reduces the number of potential outcomes to $2^{number \ in \ group}$, instead of $2^{total \ population}$ in the absence of groups.
 
 
+With these assumptions, we now define what causal effects we seek to find. Note that since the potential outcomes are not dichotomous for a particular individual in the setting of interference, we use *average* potential outcomes instead, represented by $\overline{Y^a}$ (Hudgens and Halloran, 2008). We represent the status quo treatment strategy by $\epsilon$, and the more intensive treatment strategy by $\zeta$. 
+
+1. Direct Effect - For any particular treatment strategy, a specific individual might or might not get treatment. The direct effect compares potential outcomes under treatment when the group's overall treatment assignment $Z$ is fixed: it is the difference in average potential outcomes between those who received treatment, and those who did not, i.e., $$DE = E[\overline{Y^{a = 1}}| Z = \zeta ]-E[\overline{Y^{a = 0}}| Z = \zeta]$$.
+
+2. Indirect Effect (aka Spillover Effect, or Peer Effect) - The indirect effect quantifies the effectiveness of a particular treatment strategy over another one, when a particular subject's treatment value is held constant. This is defined for a specific individual receiving a particular treatment, but whose groups has differing treatment strategies, and then averaged over all study subjects. It can be defined as $$I_0E(\zeta,\epsilon) = E[\overline{Y^{a = 0}} | Z = \zeta]-E[\overline{Y^{a = 0}} | Z = \epsilon]$$. 
+
+We can also define an indirect effect corresponding to receiving treatment, which would be $I_1E(\zeta,\epsilon) = E[\overline{Y^{a = 1}} | Z = \zeta]- E[\overline{Y^{a = 1}} | Z = \epsilon]$.
 
 
-With these assumptions, we now mathematically define what causal effects we seek to find. Note that since the potential outcomes are not dichotomous for a particular individual in the setting of interference, we use *average* potential outcomes instead. (Hudgens and Halloran, 2008). We represent the status quo treatment strategy by $\epsilon$, and the more intensive treatment strategy by $\zeta$. 
+3. Total Effect (= Direct Effect + Indirect Effect) - The total effect tells us what the causal effect of getting treated in a treatment group is, compared to not getting treated in the control group. It can be expressed as $$TE = E[\overline{Y^{a = 1}} | Z = \zeta]- E[\overline{Y^{a = 0}} | Z = \epsilon]$$ 
+Note that this is just $D + I_0$, that is, $TE = D + I_0$.
 
-1. Direct Effect - For any particular treatment strategy, a specific individual might or might not get treatment. The direct effect compares potential outcomes of the individual when the group's overall treatment assignment $Z$ is fixed: it's the difference in average potential outcomes between those who received treatment, and those who did not, i.e., $$D = E[Y^{a = 1}| Z = \zeta ]-E[Y^{a = 0}| Z = \zeta]$$.
+4. Overall Effect - The overall effect compares the outcomes in the treatment groups to the control groups, i.e., what is the difference in potential outcomes between two treatment strategies. It can be calculated as $$OE = E[\overline{Y^a} | Z= \zeta]-E[\overline{Y^a} | Z=\epsilon]$$.  
 
-2. Indirect Effect (aka Spillover Effect, or Peer Effect) - This is defined for a specific individual, receiving a particular individual treatment, but whose group has differing treatment strategies. The indirect effect quantifies the effectiveness of a particular treatment strategy over another one, and can be defined as $$I_0(\zeta,\epsilon) = E[Y^{a = 0} | Z = \zeta]-E[Y^{a = 0} | Z = \epsilon]$$. 
-
-We can also define an indirect effect corresponding to receiving treatment, which would be $I_1(\zeta,\epsilon) = E[Y^{a = 1} | Z = \zeta]- E[Y^{a = 1} | Z = \epsilon]$.
-
-
-3. Total Effect (= Direct Effect + Indirect Effect) - The total effect tells us what the causal effect of getting treated in a treatment group is, compared to not getting treated in the control group. It can be expressed as $$T = E[Y^{a = 1} | Z = \zeta]- E[Y^{a = 0} | Z = \epsilon]$$. Note that this is just $D + I_0$, that is, $T = D + I_0$.
-
-4. Overall Effect - The overall effect compares the outcomes in the treatment groups to the control groups, i.e., what is the difference in potential outcomes between two treatment strategies. It can be calculated as $$O = E[Y^a|Z= \zeta]-E[Y^a | Z=\epsilon]$$.  
+The definition for the above described effects are the same as that found in the literature, though we have introduced our own notation (Hudgens and Halloran, 2008; Tchetgen Tchetgen and VanderWeele, 2012)
 
 The following figure illustrates well what the difference is between these 4 effects (Hudgens, 2014). In the figure, the treatment strategy in the treated group was half of the patients receive treatment, and in the control group nobody receives treatment. While the figure only shows two groups, there is no limitation to the number of groups we can have. 
 
 ![](InterferenceEffects.PNG) 
 
-In order to calculate these effects, we first want to make sure exchangeability holds in our treatment groups. This can be done by randomization. In that case, $E[Y^{a=1}]$ and $E[Y | A = 1]$ are the same, and the effects can be calculated from our observed outcomes. We demonstrate these calculations using R in the next section of this post. 
+In order to calculate these effects, we first want to make sure exchangeability holds in our treatment groups. This can be done by randomization. In that case, $E[Y^{a=1}]$ and $E[Y | A = 1]$ are the same, and the effects can be calculated from our observed outcomes. We demonstrate these calculations using R in the next section of this post. Note that in the R packages we use in the following section, exchangeability is achieved using inverse probability weighing, which makes use of propensity scores instead of randomizing treatment. 
 
 
 ### Introduce Dataset
@@ -163,7 +182,7 @@ vaccinesim %>%
 #### Interference Model
 
 Because this is a simulation study, we know the correct model:
-```{r}
+```{r slow}
 correct_model <- interference( formula = Y | A | B ~ X1 + X2 + (1|group) | group, 
   allocations = seq(.2, .8, by = .05), 
   data = vaccinesim, randomization = 2/3, method = 'simple')
@@ -296,5 +315,5 @@ oeff_all %>%
 ```
 
 
-## Bibliography
+## References
 
