@@ -39,11 +39,11 @@ Causal Inference deals with this dilemma, of trying to find only how one particu
 
 For a particular subject in a study, assume we can either treat them, or not. Let the treatment be represented by $A$, with $A=0$ representing no treatment, and $A=1$ representing treatment. Then the person with have an outcome $Y$, which might or might not vary depending on $A$. In reality we only see $Y|A=1$ or $Y|A=0$. Let $A = a$, where $a \in \{0,1\}$. A variable which denotes the possible outcomes for both treatment values can then be represented as $Y^a$. We refer to $Y^a$ as the potential outcome. 
 
-Each person's potential outcomes can have *two* values, the treated value ($Y^{a=1}$) and the untreated value ($Y^{a=0}$). We can find the causal effect of treatment on one individual by calculating $Y^{a=1}-Y^{a=0}$. We can average this over all individuals to find the average causal effect, that is, $$ACE = E[Y^{a=1}]-E[Y^{a=0}]$$.
+Each person's potential outcomes can have *two* values, the treated value ($Y^{a=1}$) and the untreated value ($Y^{a=0}$). We can find the causal effect of treatment on one individual by calculating $Y^{a=1}-Y^{a=0}$. We can average this over all individuals to find the average causal effect, that is, $$ACE = E[Y^{a=1}]-E[Y^{a=0}]$$
 
 Note that of the two potential outcomes, only one is observed in reality. There are different ways in which we can find the value for the missing potential outcome . We subsequently discuss one particular method of achieving this using randomization of treatment, but there are other techniques such as Inverse Probability Weighting that can be used to this end (Hernan and Robins, 2020). 
 
-A crucial idea in causal inference is that of exchangeability. If the individuals in either of the treatment groups (control or treated) have the same characteristics, that is, one would expect them to have the same outcomes if they have the same treatment, then we can say exchangeability holds. This can be expressed as $Y^a \perp \perp A$ - the actual distribution of potential outcomes for the population is independent of the treatment. As long as we can ensure exchangeability holds between treatment groups, we can use the actual observed outcomes instead of the potential outcomes, half of which are not observed in reality. When exchangeability holds, the average causal effect becomes $E[Y|A=1]-E[Y|A=0]$. 
+A crucial idea in causal inference is that of **exchangeability**. If the individuals in either of the treatment groups (control or treated) have the same characteristics, one would expect them to have the same outcomes if they get the same treatment. We say that exchangeability holds in this case. This can be expressed as $Y^a \perp \!\!\! \perp A$ - the actual distribution of potential outcomes for the population is independent of the treatment. As long as we can ensure exchangeability holds between treatment groups, we can use the actual observed outcomes instead of the potential outcomes, half of which are not observed in reality. When exchangeability holds, the average causal effect becomes $E[Y|A=1]-E[Y|A=0]$. 
 
 One way to achieve exchangeability is by randomizing the treatment assignment. Since treatments are randomly assigned, we are assured that on average, a similar population is represented in both the treated and control groups. 
 
@@ -51,7 +51,7 @@ One way to achieve exchangeability is by randomizing the treatment assignment. S
 
 In the above process for causal interference we must make the Stable Unit Treatment Value Assumption, or **SUTVA** (Rubin, 1980, as cited in Hernán and Robins, 2020). SUTVA has two requirements:
 
-- The treatment value of one individual does not affect the potential outcome of another individual. In other words, there is no interference. 
+- The treatment value of one individual does not affect the potential outcome of another individual. In other words, there is no **interference**. 
 
 - There are not different types of exposure (for example, when two people both receive the treatment, it is not the case that one of them gets a medicine that is past the due date). 
 
@@ -94,7 +94,8 @@ Note that this is just $D + I_0$, that is, $TE = D + I_0$.
 
 The definition for the above described effects are the same as that found in the literature, though we have introduced our own notation (Hudgens and Halloran, 2008; Tchetgen Tchetgen and VanderWeele, 2012)
 
-The following figure illustrates well what the difference is between these 4 effects (Hudgens, 2014). In the figure, the treatment strategy in the treated group was half of the patients receive treatment, and in the control group nobody receives treatment. While the figure only shows two groups, there is no limitation to the number of groups we can have. 
+The following figure illustrates well what the difference is between these 4 effects (Hudgens, 2014). In the figure, the treatment strategy in the treated group was half of the patients receive treatment, and in the control group nobody receives treatment. The direct effect compares the outcomes for different treatment values within the same treatment strategy, whereas the indirect effect compares the outcomes for different treatment strategies for the same treatment value. The total effect is the sum of the direct and indirect effects, whereas the overall effect compares the overall outcomes from one treatment strategy to another. 
+While the figure only shows two groups, there is no limitation to the number of groups we can have. 
 
 ![](InterferenceEffects.PNG) 
 
@@ -103,7 +104,7 @@ In order to calculate these effects, we first want to make sure exchangeability 
 
 ### Introduce Dataset
 
-We'll be using a package called `inferference` along with its associated data set `vaccinesim`, which details results from a cholera vaccine simulation:
+We'll be using a package called `inferference` along with its associated data set `vaccinesim`, which details results from a cholera vaccine simulation (Saul and Hudgens, 2017).
 ```{r}
 head(vaccinesim)
 ```
