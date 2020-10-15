@@ -212,6 +212,8 @@ deff %>%
        y = "Direct Effect (95% CI)")
 ```
 
+This plot tells us that as the vaccination rate increases in our group, the effectiveness of getting a vaccine decreases. For example, when 20% of your group is vaccinated, the vaccine decreases the probability of catching cholera by 15%. But if 80% of your group is vaccinated, the decrease is only ~10%.(how can I communicate that this is literally percent_getting_cholera - 10% and not percent_getting_cholera*.90?) This makes intuitive sense, as when more people are vaccinated, they are less likely to spread the virus to you, meaning a vaccine has less risk to protect from. 
+
 
 #### Indirect (Spillover) Effects
 
@@ -226,6 +228,8 @@ ieff.5 %>%
        y = "Indirect Effect Relative to 50% Vaccination (95% CI)")
 ```
 
+Indirect effects are slightly more difficult to understand than direct effects as they compare how effective being in one group versus the other is at protecing you from cholera. Here, we see that relative to a 50% vaccination rate, the chance of catching Cholera if unvaccinated is around 15% higher if you were in a group with a vaccination rate of 20%. As the vaccination rate of the comparison group increases, how protective being in the 50% group is in comparison decreases. 
+
 ```{r}
 ieff_all <- correct_model$estimates %>% 
   filter(effect == "indirect")
@@ -239,35 +243,27 @@ ieff_all %>%
   scale_fill_gradient2()
 ```
 
+This is a way to see all of the combinations of vaccination rates at once. Here, as a point gets redder, it means that being in the comparison group relative to the control group is more and more harmful, and the opposite holds true as the color gets bluer. For example, if the control group vaccination rate was 0.8, and the compariosn group vaccination rate was 0.2, then being in the 0.2 group raises the probability of infecting covid by 20%. 
 
 #### Total Effects
 
 ```{r}
 teff.5_0 <- te(correct_model, allocation1 = 0.5)
-teff.5_1 <- te(correct_model, allocation1 = 0.5, trt.lvl1 = 1)
 
-teff_frame <- list("0" = teff.5_0, "1" = teff.5_1) %>% 
-  bind_rows(.id = "trt.lvl1")
-
-facet_labs_teff <- c("Unvaccinated to Vaccinated", "Vaccinated to Unvaccinated")
-names(facet_labs_teff) <- c("0", "1")
-
-teff_frame %>% 
+teff.5_0 %>% 
   ggplot(aes(x = alpha2, y = estimate, ymin = conf.low, ymax = conf.high)) +
   geom_ribbon(alpha = 1, fill = "#D1E1EC") +
   geom_line(color = "#6497B1", size = 1) +
   labs(x = "Vaccination Rate",
-       y = "Total Effect Relative to 50% Vaccination (95% CI)") +
-  facet_wrap(~trt.lvl1, labeller = labeller(trt.lvl1 = facet_labs_teff))
+       y = "Total Effect Relative to 50% Vaccination (95% CI)")
 ```
 
+Here we can see how the total effect is the sum of the direct and indirect effects. The line is higher than for indirect effects because the vaccine is always helpful, but the effectiveness changes as as vaccination rate in the comparison group increases. 
 
 ```{r}
 teff_all <- correct_model$estimates %>% 
-  filter(effect == "total")
-
-facet_labs_oeff <- c("Unvaccinated to Vaccinated", "Vaccinated to Unvaccinated")
-names(facet_labs_oeff) <- c(0, 1)
+  filter(effect == "total") %>% 
+  filter(trt1 == 0)
 
 
 teff_all %>% 
@@ -276,10 +272,10 @@ teff_all %>%
   labs(x = "Vaccination Rate in Control Group", 
        y = "Vaccination Rate in Comparison Group",
        fill = "Overall Effect") +
-  facet_wrap(~trt1, labeller = labeller(trt1 = facet_labs_oeff)) +
   scale_fill_gradient2()
 ```
 
+This plot, interpreted similarly to the indirect effect, shows that at almost all combinations of vaccination rates, taking the vaccine is effective enough to protect people even when switching to groups with lower vaccination rates. 
 
 #### Overall Effects
 
@@ -300,6 +296,7 @@ overall_effect %>%
        y = "Overall Effect Relative to 50% Vaccination (95% CI)")
 ```
 
+Here, we see that independent of vaccination, being in a group with lower vaccination rates is harmful relative to 50% vaccination rates, and higher vaccination rates are protective. 
 
 ```{r}
 
@@ -315,6 +312,7 @@ oeff_all %>%
   scale_fill_gradient2()
 ```
 
+This visualization shows that across all combinations of vaccination rates, being in a group with a higher vaccination rate is protective irrespective of if you are vaccinated or not. 
 
 ## References
 
