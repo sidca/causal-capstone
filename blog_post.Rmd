@@ -22,7 +22,7 @@ my_palette <- wes_palette("Moonrise3")
 
 theme_set(theme_minimal())
 ```
-## Introduction (or abstract?)
+## Introduction 
 
 Causal Inference, a branch of statistics, enables us to make quantitative and qualitative conclusions about the effect of a particular exposure or treatment on how the treatment alone affects a study subject's results. The standard methods of causal inference uses the Stable Unit Treatment Value Assumption (SUTVA), which requires that the exposure of one individual not affect the outcome of another. The presence of interference - that is, the phenomenon when one person getting treated affects another person's outcome - invalidates this assumption. This post investigates how we can adapt our repertoire of methods from Causal Inference to situations with interference. 
 
@@ -71,14 +71,16 @@ In a situation with interference, we see that the treatment of individual $1$, a
 
 We can carry out causal inference in settings with interference if we make a few simplifying assumptions. They are as follows: 
 
-- The population of individuals is divided into groups, where each group receives one of two treatment strategies, represented by $Z$. An example of this: in one group, 10% of the people receive treatment (the control group), whereas 80% receive treatment in the other group (the treated group). Note that each individual treatment is assigned randomly within a group. 
+- The population of individuals is divided into groups, where each group receives one of two treatment strategies, represented by $Z$.  An example of this: in one group, 10% of the people receive treatment, whereas 80% receive treatment in the other group. Note that each individual treatment is assigned randomly within a group, that is, the treatment strategy merely tells us how much of the group gets the treatment, not who gets it.
 
 - Partial interference holds, that is, there is no interaction between individuals in different groups. In other words, people located in different groups cannot influence each other's potential outcomes. Intuitively, one could think of individuals located in different cities - what treatment someone receives in Saint Paul is not going to affect someone in Chicago.  
 
-A consequence of interference is that each individual now has more than two potential outcomes, since they will either get treated or not treated, their neighbor (for lack of a better term) will get treated or not treated, and so on. Thus there are $2*2*2*2... =2^{number \ of \  group \ members}$ outcomes. Note that assumption (1) reduces the number of potential outcomes to $2^{number \ in \ group}$, instead of $2^{total \ population}$ in the absence of groups.
+A consequence of interference is that each individual now has more than two potential outcomes, since they will either get treated or not treated, their neighbor (for lack of a better term) will get treated or not treated, and so on. Thus there are $2*2*2*2... =2^{number \ of \  group \ members}$ outcomes. Note that assumption (1) reduces the number of potential outcomes to $2^{number \ in \ group}$, instead of $2^{total \ population}$ in the absence of groups. 
+
+Note that since the potential outcomes are not dichotomous for a particular individual in the setting of interference, we use *average* potential outcomes instead, represented by $\overline{Y^a}$ (Hudgens and Halloran, 2008). For example, let us assume there are 10 people in a group where the treatment strategy states that 60% of the population get treated. Then let us consider a particular individual in the group. They either get treated  or they don't get treated. For each treatment value of this individual, there are $2^9$ possible variations for the other people in the group, which by definition of interference affect the potential outcome value of our person of interest. This is why we define an average potential outcome, where we average over all the potential outcomes of the individual. Thus, $\overline{Y^{a=1}}$ tells us what is the average potential outcome when the individual got treated, while we vary the treatment values for the remaining nine people in the group, and $\overline{Y^{a=0}}$ tells us the same thing when the individual does not get the treatment. 
 
 
-With these assumptions, we now define what causal effects we seek to find. Note that since the potential outcomes are not dichotomous for a particular individual in the setting of interference, we use *average* potential outcomes instead, represented by $\overline{Y^a}$ (Hudgens and Halloran, 2008). We represent the status quo treatment strategy by $\epsilon$, and the more intensive treatment strategy by $\zeta$. 
+With these assumptions, we now define what causal effects we seek to find.  We represent the status quo treatment strategy by $Z = \epsilon$ (the control), and the other treatment strategy by $Z = \zeta$ (the treatment). 
 
 1. Direct Effect - For any particular treatment strategy, a specific individual might or might not get treatment. The direct effect compares potential outcomes under treatment when the group's overall treatment assignment $Z$ is fixed: it is the difference in average potential outcomes between those who received treatment, and those who did not, i.e., $$DE = E[\overline{Y^{a = 1}}| Z = \zeta ]-E[\overline{Y^{a = 0}}| Z = \zeta]$$.
 
