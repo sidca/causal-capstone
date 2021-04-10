@@ -56,6 +56,7 @@ As we defined earlier, interference is said to occur if the potential outcomes o
 First, we see a situation without interference. The effect of treatment on individual $1$, $A_1$, only affects the outcome of individual $1$. The same is true for individuals $2$ and $3$.
 
 ![](nointerferenceDAG.png)
+
 In a situation with interference, we see that the treatment of individual $1$, affects the outcome of all individuals present ($Y1$, $Y2$, and $Y3$). We can see how much more complicated our graph becomes in the presence of interference even when we have just three observations in the system. 
 ![](interferenceDAG.png)
 
@@ -380,7 +381,7 @@ ieff_all %>%
 
 ![](blog_post_files/figure-html/unnamed-chunk-7-1.png)<!-- -->
 
-This is a way to see all of the combinations of vaccination rates at once. Here, as a point gets redder, it means that being in the comparison group relative to the control group is more and more harmful, and the opposite holds true as the color gets bluer. For example, if the control group vaccination rate was 0.8, and the compariosn group vaccination rate was 0.2, then being in the 0.2 group raises the probability of infecting covid by 20%. 
+This is a way to see all of the combinations of vaccination rates at once. Here, as a point gets redder, it means that being in the comparison group relative to the control group is more and more harmful, and the opposite holds true as the color gets bluer. For example, if the control group vaccination rate was 0.8, and the comparison group vaccination rate was 0.2, then being in the 0.2 group raises the probability of infecting covid by 20%. 
 
 #### Total Effects
 
