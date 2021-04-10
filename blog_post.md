@@ -11,21 +11,7 @@ bibliography:  references.bib
 nocite: '@*'
 ---
 
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
 
-library(tidyverse)
-library(inferference)
-library(wesanderson)
-library(lme4)
-library(broom.mixed)
-
-my_palette <- wes_palette("Moonrise3")
-
-
-
-theme_set(theme_minimal())
-```
 ## Introduction 
 
 Causal Inference, a branch of statistics, enables us to make quantitative and qualitative conclusions about the effect of a particular exposure or treatment on how the treatment alone affects a study subject's results. The standard methods of causal inference uses the Stable Unit Treatment Value Assumption (SUTVA), which requires that the exposure of one individual not affect the outcome of another. The presence of interference - that is, the phenomenon when one person getting treated affects another person's outcome - invalidates this assumption. This post investigates how we can adapt our repertoire of methods from Causal Inference to situations with interference. 
@@ -111,8 +97,19 @@ In order to calculate these effects, we first want to make sure exchangeability 
 ### Introduce Dataset
 
 We'll be using a package called `inferference` along with its associated data set `vaccinesim`, which details results from a cholera vaccine simulation (Saul and Hudgens, 2017).
-```{r}
+
+```r
 head(vaccinesim)
+```
+
+```
+##   Y        X1       X2 A B group
+## 1 1 5.3607405 1.715527 0 0     1
+## 2 0 0.1964597 1.730802 0 1     1
+## 3 0 0.4846243 1.769546 1 1     1
+## 4 0 0.8012977 1.715527 0 1     1
+## 5 0 2.1426629 1.772158 1 1     1
+## 6 0 1.2861017 1.715527 0 1     1
 ```
 
 - Y: Did the subject contract cholera
@@ -126,20 +123,29 @@ head(vaccinesim)
 
 Let's examine how different variables relate to infection
 
-```{r}
+
+```r
 vaccinesim %>% 
   ggplot() +
   geom_boxplot(aes(x = as.factor(Y), y = X1)) +
   labs(x = "Infected",
        y = "Age (Decades)",
        title = "Age and Infection")
+```
 
+![](blog_post_files/figure-html/unnamed-chunk-2-1.png)<!-- -->
+
+```r
 vaccinesim %>% 
   ggplot() +
   geom_boxplot(aes(x = as.factor(Y), y = X2)) +
   labs(x = "Infected", 
        y = "Distance from River")
+```
 
+![](blog_post_files/figure-html/unnamed-chunk-2-2.png)<!-- -->
+
+```r
 vaccinesim %>% 
   ggplot() +
   geom_bar(aes(x = as.factor(A), fill = as.factor(Y)),
@@ -148,7 +154,11 @@ vaccinesim %>%
        fill = "Infected",
        y = "Proportion") +
   scale_fill_manual(values = my_palette)
+```
 
+![](blog_post_files/figure-html/unnamed-chunk-2-3.png)<!-- -->
+
+```r
 vaccinesim %>% 
   ggplot() +
   geom_bar(aes(x = as.factor(group), fill = as.factor(Y)),
@@ -161,6 +171,8 @@ vaccinesim %>%
   scale_fill_manual(values = my_palette)
 ```
 
+![](blog_post_files/figure-html/unnamed-chunk-2-4.png)<!-- -->
+
 Looks like age, distance from a river, vaccination, and group are all associated with infection. 
 
 
@@ -168,20 +180,28 @@ Looks like age, distance from a river, vaccination, and group are all associated
 
 Now lets see how different variables relate to vaccination status:
 
-```{r}
+
+```r
 vaccinesim %>% 
   ggplot() +
   geom_boxplot(aes(x = as.factor(A), y = X1)) +
   labs(x = "Vaccinated",
        y = "Age (Decades)")
+```
 
+![](blog_post_files/figure-html/unnamed-chunk-3-1.png)<!-- -->
+
+```r
 vaccinesim %>% 
   ggplot() +
   geom_boxplot(aes(x = as.factor(A), y = X2)) +
   labs(x = "Vaccinated", 
        y = "Distance from River")
+```
 
+![](blog_post_files/figure-html/unnamed-chunk-3-2.png)<!-- -->
 
+```r
 vaccinesim %>% 
   ggplot() +
   geom_bar(aes(x = as.factor(group), fill = as.factor(A)),
@@ -194,6 +214,8 @@ vaccinesim %>%
   scale_fill_manual(values = my_palette)
 ```
 
+![](blog_post_files/figure-html/unnamed-chunk-3-3.png)<!-- -->
+
 Looks like age, distance from river, and group are all associated with whether a subject is vaccinated or not. 
 
 
@@ -201,7 +223,8 @@ Looks like age, distance from river, and group are all associated with whether a
 
 To demonstrate the importance of interference, we'll fit a naive model to try and estimate the causal effect of vaccination on infection with Cholera. Based on our data exploration and expert knowledge, we'll include `Age`,  `Distance from River`, and `Group` in our model to give our analysis exchangeability. That is, we think people who are the same age, distance from river, and in the same group are basically the same. We'll also include `Vaccination Status`, and the coefficient on this term will be our causal effect.  
 
-```{r}
+
+```r
 set.seed(451)
 
 naive_model <- vaccinesim %>% 
@@ -212,14 +235,64 @@ naive_model <- vaccinesim %>%
   glmer(Y ~ A + X1 + X2 + (1|group), data = ., family = binomial)
 
 summary(naive_model)
+```
 
+```
+## Generalized linear mixed model fit by maximum likelihood (Laplace
+##   Approximation) [glmerMod]
+##  Family: binomial  ( logit )
+## Formula: Y ~ A + X1 + X2 + (1 | group)
+##    Data: .
+## 
+##      AIC      BIC   logLik deviance df.resid 
+##   3135.9   3165.9  -1563.0   3125.9     2995 
+## 
+## Scaled residuals: 
+##     Min      1Q  Median      3Q     Max 
+## -0.9834 -0.6210 -0.4226 -0.0854  4.5139 
+## 
+## Random effects:
+##  Groups Name        Variance Std.Dev.
+##  group  (Intercept) 0.1612   0.4015  
+## Number of obs: 3000, groups:  group, 250
+## 
+## Fixed effects:
+##             Estimate Std. Error z value Pr(>|z|)    
+## (Intercept) -0.22396    0.10114  -2.214   0.0268 *  
+## A1          -0.96135    0.10367  -9.273  < 2e-16 ***
+## X1          -0.12409    0.02588  -4.795 1.62e-06 ***
+## X2          -0.32258    0.05870  -5.495 3.90e-08 ***
+## ---
+## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+## 
+## Correlation of Fixed Effects:
+##    (Intr) A1     X1    
+## A1 -0.288              
+## X1 -0.474  0.049       
+## X2 -0.640 -0.066  0.024
+```
+
+```r
 glue::glue("\n\n\nOdds Ratio for Vaccination: {exp(summary(naive_model)$coefficients[2,1])}")
+```
 
+```
+## 
+## 
+## Odds Ratio for Vaccination: 0.382376635120038
+```
+
+```r
 prob <- predict(naive_model, data.frame(A = factor(0, levels = c(0,1)), X1 = 2, X2 = 2, group = factor(1, levels = c(1:250))), type = "response") - predict(naive_model, data.frame(A = factor(1, levels = c(0,1)), X1 = 2, X2 = 2, group = factor(1, levels = c(1:250))), type = "response")
 
 
 glue::glue("\n\n\nChange in Probability for Vaccination: {prob}")
+```
 
+```
+## 
+## 
+## Change in Probability for Vaccination: 0.130285416947459
 ```
 
 Here, we see that the vaccination indicator has a log odds ratio of -0.96, which translates to an odds ratio of about 0.38. This means the vaccine is decently protective. Notably this is on a different scale of units than the interference model will give, which instead reports change in probability of infection. We can get a general idea of the vaccination effect by looking at a given person, here someone who is 20, is 2 units from the river, and is in group 1. To them, the vaccine decreases the probability of infection by 13%. 
@@ -232,7 +305,8 @@ As we'll see, this value is similar to that of the direct effect for a moderate 
 Now, we'll begin working on the interference model. This model will allow us to understand how protective vaccination is both for its herd immunity effect and its direct effect on an individual.
 
 Because this is a simulation study, we know the correct model:
-```{r slow}
+
+```r
 set.seed(451)
 
 correct_model <- interference( formula = Y | A | B ~ X1 + X2 + (1|group) | group, 
@@ -252,7 +326,8 @@ Model works like this `outcome | exposure | participation ~ covariates | interfe
 
 #### Direct Effects
 
-```{r}
+
+```r
 deff <- direct_effect(correct_model)
 
 deff %>% 
@@ -264,12 +339,15 @@ deff %>%
        title = "Direct Effect of Vaccination")
 ```
 
+![](blog_post_files/figure-html/unnamed-chunk-5-1.png)<!-- -->
+
 This plot tells us that as the vaccination rate increases in our group, the effectiveness of getting a vaccine decreases. For example, when 20% of your group is vaccinated, the vaccine lowers the probability of catching cholera by 15%. But if 80% of your group is vaccinated, the drop in probability is only ~10%. This makes intuitive sense, as when more people are vaccinated, they are less likely to spread the virus to you, meaning a vaccine has less risk to protect from. 
 
 
 #### Indirect (Spillover) Effects
 
-```{r}
+
+```r
 ieff.5 <- ie(correct_model, allocation1 = 0.5)
 
 ieff.5 %>% 
@@ -281,9 +359,12 @@ ieff.5 %>%
        title = "Indirect Effect of Vaccination relative to 50% Vaccination")
 ```
 
+![](blog_post_files/figure-html/unnamed-chunk-6-1.png)<!-- -->
+
 Indirect effects are slightly more difficult to understand than direct effects as they compare how effective being in one group versus the other is at protecing you from cholera. Here, we see that relative to a 50% vaccination rate, the chance of catching Cholera if unvaccinated is around 15% higher if you were in a group with a vaccination rate of 20%. As the vaccination rate of the comparison group increases, how protective being in the 50% group is in comparison decreases. 
 
-```{r}
+
+```r
 ieff_all <- correct_model$estimates %>% 
   filter(effect == "indirect")
 
@@ -297,11 +378,14 @@ ieff_all %>%
   scale_fill_gradient2()
 ```
 
+![](blog_post_files/figure-html/unnamed-chunk-7-1.png)<!-- -->
+
 This is a way to see all of the combinations of vaccination rates at once. Here, as a point gets redder, it means that being in the comparison group relative to the control group is more and more harmful, and the opposite holds true as the color gets bluer. For example, if the control group vaccination rate was 0.8, and the compariosn group vaccination rate was 0.2, then being in the 0.2 group raises the probability of infecting covid by 20%. 
 
 #### Total Effects
 
-```{r}
+
+```r
 teff.5_0 <- te(correct_model, allocation1 = 0.5)
 
 teff.5_0 %>% 
@@ -313,9 +397,12 @@ teff.5_0 %>%
        title = "Total Effect of Vaccination relative to 50% Vaccination")
 ```
 
+![](blog_post_files/figure-html/unnamed-chunk-8-1.png)<!-- -->
+
 Here we can see how the total effect is the sum of the direct and indirect effects. The line is higher than for indirect effects because the vaccine is always helpful, but the effectiveness changes as as vaccination rate in the comparison group increases. 
 
-```{r}
+
+```r
 teff_all <- correct_model$estimates %>% 
   filter(effect == "total") %>% 
   filter(trt1 == 0)
@@ -331,11 +418,14 @@ teff_all %>%
   scale_fill_gradient2()
 ```
 
+![](blog_post_files/figure-html/unnamed-chunk-9-1.png)<!-- -->
+
 This plot, interpreted similarly to the indirect effect, shows that at almost all combinations of vaccination rates, taking the vaccine is effective enough to protect people even when switching to groups with lower vaccination rates. 
 
 #### Overall Effects
 
-```{r}
+
+```r
 oeff.5 <- oe(correct_model, allocation1 = 0.5)
 x <- oeff.5$alpha2
 y <- as.numeric(oeff.5$estimate)
@@ -353,10 +443,12 @@ overall_effect %>%
        title = "Overall Effect of Vaccination relative to 50% Vaccination")
 ```
 
+![](blog_post_files/figure-html/unnamed-chunk-10-1.png)<!-- -->
+
 Here, we see that independent of vaccination, being in a group with lower vaccination rates is harmful relative to 50% vaccination rates, and higher vaccination rates are protective. 
 
-```{r}
 
+```r
 oeff_all <- correct_model$estimates %>% 
   filter(effect == "overall")
 
@@ -369,6 +461,8 @@ oeff_all %>%
        title = "Overall Effect of Vaccination") +
   scale_fill_gradient2()
 ```
+
+![](blog_post_files/figure-html/unnamed-chunk-11-1.png)<!-- -->
 
 This visualization shows that across all combinations of vaccination rates, being in a group with a higher vaccination rate is protective irrespective of if you are vaccinated or not. 
 
