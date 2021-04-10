@@ -56,6 +56,7 @@ As we defined earlier, interference is said to occur if the potential outcomes o
 First, we see a situation without interference. The effect of treatment on individual $1$, $A_1$, only affects the outcome of individual $1$. The same is true for individuals $2$ and $3$.
 
 ![](nointerferenceDAG.png)
+
 In a situation with interference, we see that the treatment of individual $1$, affects the outcome of all individuals present ($Y1$, $Y2$, and $Y3$). We can see how much more complicated our graph becomes in the presence of interference even when we have just three observations in the system. 
 ![](interferenceDAG.png)
 
@@ -76,7 +77,7 @@ With these assumptions, we now define what causal effects we seek to find.  We r
 
 2. Indirect Effect (aka Spillover Effect, or Peer Effect) - The indirect effect quantifies the effectiveness of a particular treatment strategy over another one, when a particular subject's treatment value is held constant. This is defined for a specific individual receiving a particular treatment, but whose groups has differing treatment strategies, and then averaged over all study subjects. It can be defined as $$I_0E(\zeta,\epsilon) = E[\overline{Y^{a = 0}} | Z = \zeta]-E[\overline{Y^{a = 0}} | Z = \epsilon]$$. 
 
-We can also define an indirect effect corresponding to receiving treatment, which would be $I_1E(\zeta,\epsilon) = E[\overline{Y^{a = 1}} | Z = \zeta]- E[\overline{Y^{a = 1}} | Z = \epsilon]$.
+    We can also define an indirect effect corresponding to receiving treatment, which would be: $$I_1E(\zeta,\epsilon) = E[\overline{Y^{a = 1}} | Z = \zeta]- E[\overline{Y^{a = 1}} | Z = \epsilon]$$.
 
 
 3. Total Effect (= Direct Effect + Indirect Effect) - The total effect tells us what the causal effect of getting treated in a treatment group is, compared to not getting treated in the control group. It can be expressed as $$TE = E[\overline{Y^{a = 1}} | Z = \zeta]- E[\overline{Y^{a = 0}} | Z = \epsilon]$$ 
@@ -133,7 +134,7 @@ vaccinesim %>%
        title = "Age and Infection")
 ```
 
-![](blog_post_files/figure-html/unnamed-chunk-2-1.png)<!-- -->
+![](index_files/figure-html/unnamed-chunk-2-1.png)<!-- -->
 
 ```r
 vaccinesim %>% 
@@ -143,7 +144,7 @@ vaccinesim %>%
        y = "Distance from River")
 ```
 
-![](blog_post_files/figure-html/unnamed-chunk-2-2.png)<!-- -->
+![](index_files/figure-html/unnamed-chunk-2-2.png)<!-- -->
 
 ```r
 vaccinesim %>% 
@@ -156,7 +157,7 @@ vaccinesim %>%
   scale_fill_manual(values = my_palette)
 ```
 
-![](blog_post_files/figure-html/unnamed-chunk-2-3.png)<!-- -->
+![](index_files/figure-html/unnamed-chunk-2-3.png)<!-- -->
 
 ```r
 vaccinesim %>% 
@@ -171,7 +172,7 @@ vaccinesim %>%
   scale_fill_manual(values = my_palette)
 ```
 
-![](blog_post_files/figure-html/unnamed-chunk-2-4.png)<!-- -->
+![](index_files/figure-html/unnamed-chunk-2-4.png)<!-- -->
 
 Looks like age, distance from a river, vaccination, and group are all associated with infection. 
 
@@ -189,7 +190,7 @@ vaccinesim %>%
        y = "Age (Decades)")
 ```
 
-![](blog_post_files/figure-html/unnamed-chunk-3-1.png)<!-- -->
+![](index_files/figure-html/unnamed-chunk-3-1.png)<!-- -->
 
 ```r
 vaccinesim %>% 
@@ -199,7 +200,7 @@ vaccinesim %>%
        y = "Distance from River")
 ```
 
-![](blog_post_files/figure-html/unnamed-chunk-3-2.png)<!-- -->
+![](index_files/figure-html/unnamed-chunk-3-2.png)<!-- -->
 
 ```r
 vaccinesim %>% 
@@ -214,7 +215,7 @@ vaccinesim %>%
   scale_fill_manual(values = my_palette)
 ```
 
-![](blog_post_files/figure-html/unnamed-chunk-3-3.png)<!-- -->
+![](index_files/figure-html/unnamed-chunk-3-3.png)<!-- -->
 
 Looks like age, distance from river, and group are all associated with whether a subject is vaccinated or not. 
 
@@ -339,7 +340,7 @@ deff %>%
        title = "Direct Effect of Vaccination")
 ```
 
-![](blog_post_files/figure-html/unnamed-chunk-5-1.png)<!-- -->
+![](index_files/figure-html/unnamed-chunk-5-1.png)<!-- -->
 
 This plot tells us that as the vaccination rate increases in our group, the effectiveness of getting a vaccine decreases. For example, when 20% of your group is vaccinated, the vaccine lowers the probability of catching cholera by 15%. But if 80% of your group is vaccinated, the drop in probability is only ~10%. This makes intuitive sense, as when more people are vaccinated, they are less likely to spread the virus to you, meaning a vaccine has less risk to protect from. 
 
@@ -359,7 +360,7 @@ ieff.5 %>%
        title = "Indirect Effect of Vaccination relative to 50% Vaccination")
 ```
 
-![](blog_post_files/figure-html/unnamed-chunk-6-1.png)<!-- -->
+![](index_files/figure-html/unnamed-chunk-6-1.png)<!-- -->
 
 Indirect effects are slightly more difficult to understand than direct effects as they compare how effective being in one group versus the other is at protecing you from cholera. Here, we see that relative to a 50% vaccination rate, the chance of catching Cholera if unvaccinated is around 15% higher if you were in a group with a vaccination rate of 20%. As the vaccination rate of the comparison group increases, how protective being in the 50% group is in comparison decreases. 
 
@@ -378,9 +379,9 @@ ieff_all %>%
   scale_fill_gradient2()
 ```
 
-![](blog_post_files/figure-html/unnamed-chunk-7-1.png)<!-- -->
+![](index_files/figure-html/unnamed-chunk-7-1.png)<!-- -->
 
-This is a way to see all of the combinations of vaccination rates at once. Here, as a point gets redder, it means that being in the comparison group relative to the control group is more and more harmful, and the opposite holds true as the color gets bluer. For example, if the control group vaccination rate was 0.8, and the compariosn group vaccination rate was 0.2, then being in the 0.2 group raises the probability of infecting covid by 20%. 
+This is a way to see all of the combinations of vaccination rates at once. Here, as a point gets redder, it means that being in the comparison group relative to the control group is more and more harmful, and the opposite holds true as the color gets bluer. For example, if the control group vaccination rate was 0.8, and the comparison group vaccination rate was 0.2, then being in the 0.2 group raises the probability of infecting covid by 20%. 
 
 #### Total Effects
 
@@ -397,7 +398,7 @@ teff.5_0 %>%
        title = "Total Effect of Vaccination relative to 50% Vaccination")
 ```
 
-![](blog_post_files/figure-html/unnamed-chunk-8-1.png)<!-- -->
+![](index_files/figure-html/unnamed-chunk-8-1.png)<!-- -->
 
 Here we can see how the total effect is the sum of the direct and indirect effects. The line is higher than for indirect effects because the vaccine is always helpful, but the effectiveness changes as as vaccination rate in the comparison group increases. 
 
@@ -418,7 +419,7 @@ teff_all %>%
   scale_fill_gradient2()
 ```
 
-![](blog_post_files/figure-html/unnamed-chunk-9-1.png)<!-- -->
+![](index_files/figure-html/unnamed-chunk-9-1.png)<!-- -->
 
 This plot, interpreted similarly to the indirect effect, shows that at almost all combinations of vaccination rates, taking the vaccine is effective enough to protect people even when switching to groups with lower vaccination rates. 
 
@@ -443,7 +444,7 @@ overall_effect %>%
        title = "Overall Effect of Vaccination relative to 50% Vaccination")
 ```
 
-![](blog_post_files/figure-html/unnamed-chunk-10-1.png)<!-- -->
+![](index_files/figure-html/unnamed-chunk-10-1.png)<!-- -->
 
 Here, we see that independent of vaccination, being in a group with lower vaccination rates is harmful relative to 50% vaccination rates, and higher vaccination rates are protective. 
 
@@ -462,7 +463,7 @@ oeff_all %>%
   scale_fill_gradient2()
 ```
 
-![](blog_post_files/figure-html/unnamed-chunk-11-1.png)<!-- -->
+![](index_files/figure-html/unnamed-chunk-11-1.png)<!-- -->
 
 This visualization shows that across all combinations of vaccination rates, being in a group with a higher vaccination rate is protective irrespective of if you are vaccinated or not. 
 
