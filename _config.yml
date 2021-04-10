@@ -1,1 +1,6 @@
-theme: none
+name: "Introduction to Interference"
+navbar:
+  title: "Introduction to Interference"
+  left:
+    - text: "Introduction to Interference"
+      href: blog_post.html
